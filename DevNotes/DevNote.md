@@ -22,7 +22,9 @@ Use this as a reward token, and because I am going to distribute it in quantity,
 
 #### 2.2.1 Approach
 
-Original contract used UUPS, I used to think this approach inferior, I might want to implement upgradability with TProxy
+Original contract used UUPS, I used to think this approach inferior, ~~I might want to implement upgradability with
+TProxy~~
+I will try and implement UUPS
 
 ### 2.3 Pause
 
@@ -71,4 +73,15 @@ Original code initialized with `10_000_000` of decimal 18 tokens, and stated tha
 trade-off?
 
 Pre-mint:
-Funds immediately available, easy to implement,
+Funds immediately available, easy to implement, but is not flexible and exposes risks, so I will be minting on need(like
+mint on reward claim) in my implementation
+
+### 4.2 Stake contract
+
+#### 4.2.1 Additional control components to add
+
+- Access Control
+- Reentrancy guard
+- ~~TProxy~~ UUPS
+    - For general purposed contracts, TProxy is better because of separation of proxy and business logic, but when
+      implementing a DeFi project, users can benefit from the lower gas costs of UUPS, plus the standard is improving
