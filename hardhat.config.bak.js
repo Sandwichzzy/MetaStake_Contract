@@ -29,61 +29,61 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 100
+                        runs: 100,
                     },
-                    viaIR: true
-                }
+                    viaIR: true,
+                },
             },
             {
                 version: "0.8.19",
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 100
+                        runs: 100,
                     },
-                    viaIR: true
-                }
+                    viaIR: true,
+                },
             },
             {
                 version: "0.8.27",
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 100
+                        runs: 100,
                     },
-                    viaIR: true
-                }
+                    viaIR: true,
+                },
             },
             {
                 version: "0.7.5",
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 100
+                        runs: 100,
                     },
-                    viaIR: true
-                }
-            }
-        ]
+                    viaIR: true,
+                },
+            },
+        ],
     },
     networks: {
         hardhat: {
             chainId: 31337,
             forking: {
                 url: MAINNET_RPC_URL,
-                blockNumber: 22851531
-            }
+                blockNumber: 22851531,
+            },
         },
         localhost: {
             chainId: 31337,
             forking: {
                 url: MAINNET_RPC_URL,
-                blockNumber: 22851531
+                blockNumber: 22851531,
             },
             ignition: {
                 blockPollingInterval: 1_000,
-                requiredConfirmations: 1
-            }
+                requiredConfirmations: 1,
+            },
         },
         sepolia: {
             url: SEPOLIA_RPC_URL,
@@ -91,27 +91,27 @@ module.exports = {
             chainId: 11155111,
             ignition: {
                 blockPollingInterval: 1_000,
-                requiredConfirmations: 1
-            }
-        }
+                requiredConfirmations: 1,
+            },
+        },
     },
     typechain: {
         outDir: "typechain",
         target: "ethers-v6",
         alwaysGenerateOverloads: true,
-        dontOverrideCompile: false
+        dontOverrideCompile: false,
     },
     etherscan: {
-        apiKey: ETHERSCAN_API_KEY
+        apiKey: ETHERSCAN_API_KEY,
     },
     gasReporter: {
         enabled: true,
         outputFile: "./test-reports/gas-report.txt",
         noColors: true,
-        currency: "USD"
+        currency: "USD",
         // coinmarketcap: COINMARKETCAP_API_KEY,
     },
     mocha: {
-        timeout: 300_000
-    }
+        timeout: 300_000,
+    },
 };

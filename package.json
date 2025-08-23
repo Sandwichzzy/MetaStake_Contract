@@ -1,36 +1,46 @@
 {
-  "name": "MetaNode-contract",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.0",
-    "@nomicfoundation/hardhat-ignition": "^0.15.0",
-    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomicfoundation/hardhat-verify": "^2.0.0",
-    "@typechain/ethers-v6": "^0.5.0",
-    "@typechain/hardhat": "^9.0.0",
-    "chai": "^4.2.0",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.4.0",
-    "hardhat": "^2.22.8",
-    "hardhat-deploy": "^0.14.0",
-    "hardhat-gas-reporter": "^1.0.8",
-    "solidity-coverage": "^0.8.0",
-    "typechain": "^8.3.0"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2",
-    "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "@openzeppelin/hardhat-upgrades": "^3.2.1"
-  }
+    "name": "MetaNode-contract",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "h-compile": "hardhat compile",
+        "h-clean": "hardhat clean",
+        "h-test": "hardhat test",
+        "h-test-s": "hardhat test --network sepolia",
+        "h-node": "hardhat node",
+        "h-i-deploy": "hardhat ignition deploy",
+        "h-s-deploy": "hardhat run scripts/deploy.js",
+        "h-verify": "hardhat ignition verify",
+        "h-run": "hardhat run"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+        "@nomicfoundation/hardhat-ethers": "^3.0.0",
+        "@nomicfoundation/hardhat-ignition": "^0.15.0",
+        "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
+        "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "@nomicfoundation/hardhat-verify": "^2.0.0",
+        "@typechain/ethers-v6": "^0.5.0",
+        "@typechain/hardhat": "^9.0.0",
+        "chai": "^4.2.0",
+        "dotenv": "^16.4.5",
+        "ethers": "^6.4.0",
+        "hardhat": "^2.22.8",
+        "hardhat-deploy": "^0.14.0",
+        "hardhat-gas-reporter": "^1.0.8",
+        "prettier": "^3.6.2",
+        "solidity-coverage": "^0.8.0",
+        "typechain": "^8.3.0"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts-upgradeable": "^5.0.2",
+        "@openzeppelin/hardhat-upgrades": "^3.2.1"
+    },
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
