@@ -12,6 +12,8 @@ Notes-mirror/
 │   │   └── uups-vs-transparent-proxy.md
 │   ├── Code-Style/
 │   │   └── naming-conventions.md
+├── Deployment-Strategy/
+│   └── deployment-flow-review.md
 ```
 
 ## Notes Index
@@ -22,6 +24,10 @@ Notes-mirror/
 - **Code Style**
   - `naming-conventions.md`: Solidity naming conventions, underscore patterns, public-internal function patterns, and style guide references
 
+### Deployment Strategy
+- **Deployment Flow**
+  - `deployment-flow-review.md`: Review and assessment of the UUPS deployment strategy, including strengths, technical accuracy, and improvement recommendations
+
 ## Topics Coverage
 - [ ] Smart Contract Security
 - [x] Proxy Patterns
@@ -30,6 +36,7 @@ Notes-mirror/
 - [ ] Upgradeability
 - [ ] Gas Optimization
 - [ ] DeFi Patterns
+- [x] Deployment Strategy
 
 ## Note Creation Guidelines
 - Max 3 levels of subdirectories

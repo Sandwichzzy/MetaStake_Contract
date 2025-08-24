@@ -34,6 +34,7 @@
         "hardhat-deploy": "^0.14.0",
         "hardhat-gas-reporter": "^1.0.8",
         "prettier": "^3.6.2",
+        "solhint": "^6.0.1",
         "solidity-coverage": "^0.8.0",
         "typechain": "^8.3.0"
     },

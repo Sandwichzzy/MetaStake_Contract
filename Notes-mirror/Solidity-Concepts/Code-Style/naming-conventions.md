@@ -100,6 +100,55 @@ function _transfer(address from, address to, uint256 amount) internal virtual {
 - **Modifiers**: `camelCase`
 - **Contracts**: `PascalCase`
 
+## Dollar Sign (`$`) Pattern in Upgradeable Contracts
+
+### Diamond Storage Pattern
+The `$` symbol is a naming convention used with OpenZeppelin's upgradeable contracts for storage structs in the diamond storage pattern:
+
+```solidity
+AccessControlStorage storage $ = _getAccessControlStorage();
+return $._roles[role].adminRole;
+```
+
+### Purpose
+- **Upgrade Safety**: Ensures storage variables don't conflict during contract upgrades
+- **Storage Isolation**: Each functionality gets its own storage namespace
+- **Collision Prevention**: Uses specific storage slots based on hash calculations
+
+### How It Works
+```solidity
+// Storage struct definition
+struct AccessControlStorage {
+    mapping(bytes32 => RoleData) _roles;
+    // other storage variables...
+}
+
+// Storage location constant (computed hash)
+bytes32 private constant AccessControlStorageLocation = 0x...;
+
+// Storage getter function
+function _getAccessControlStorage() private pure returns (AccessControlStorage storage $) {
+    assembly {
+        $.slot := AccessControlStorageLocation
+    }
+}
+```
+
+### Usage Pattern
+1. Define a storage struct for related variables
+2. Calculate a unique storage slot using keccak256 hash
+3. Use assembly to point to that specific slot
+4. Access storage through the `$` reference
+
+### Benefits
+- **Upgrade-Safe**: No storage layout conflicts between contract versions
+- **Organized**: Related storage variables grouped together
+- **Gas Efficient**: Direct storage slot access
+- **Standard**: OpenZeppelin convention for upgradeable contracts
+
+### Essential for UUPS Contracts
+This pattern is crucial in UUPS upgradeable contracts like `MetaNodeStake.sol` to prevent storage collisions during upgrades.
+
 ## Practical Application
 The underscore pattern helps distinguish between:
 - **Interface/API functions** (what users interact with)
