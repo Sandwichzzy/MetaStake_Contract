@@ -14,4 +14,6 @@ contract MetaNodeStakeProxy is ERC1967Proxy {
     receive() external payable {
         _fallback();
     }
+
+    
 }

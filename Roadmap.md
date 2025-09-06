@@ -10,17 +10,30 @@
 
 ### OpenZeppelin Components
 
-- [ ] Access Control
-- [ ] UUPS
-- [ ] Reentrancy Guard
+- [x] Access Control
+- [x] UUPS
+- [ ] Pause
+- [ ] Reentrancy Guard(Implement when hitting the funcs)
 
 ### Staker Functionalities
 
 - [ ] Stake
 - [ ] Unstake
 - [ ] Claim rewards
+    - [ ] Reward calculation
 
 ### Administrative functionalities
 
-- [ ] Upgrade logic
-- [ ] Pause / Resume txns
+- [x] Upgrade logic
+- [x] Pause / Resume txns
+    - [x] OpenZeppelin pause logic uses a global `paused()` to track pause state, this can be employed directly or I can declare separate pause states for different purposes like the original
+
+## Progression log
+
+### 20250827
+
+- Token, proxy contract should be good to go， start with stake
+
+### 20250906
+
+- Working on pause

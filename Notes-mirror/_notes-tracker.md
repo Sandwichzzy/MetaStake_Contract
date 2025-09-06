@@ -9,7 +9,8 @@ Notes-mirror/
 ├── _notes-tracker.md (this file)
 ├── Solidity-Concepts/
 │   ├── Proxy-Patterns/
-│   │   └── uups-vs-transparent-proxy.md
+│   │   ├── uups-vs-transparent-proxy.md
+│   │   └── uups-upgrade-mechanics.md
 │   ├── Code-Style/
 │   │   └── naming-conventions.md
 ├── Deployment-Strategy/
@@ -21,8 +22,10 @@ Notes-mirror/
 ### Solidity Concepts
 - **Proxy Patterns**
   - `uups-vs-transparent-proxy.md`: Comprehensive comparison between UUPS and Transparent Proxy patterns, including when to use each and practical recommendations
+  - `uups-upgrade-mechanics.md`: Detailed explanation of UUPS upgrade process, reinitializer pattern, AccessControl preservation, and practical upgrade examples
 - **Code Style**
   - `naming-conventions.md`: Solidity naming conventions, underscore patterns, public-internal function patterns, and style guide references
+  - `contract-layout-template.md`: Standard contract organization template with function/modifier ordering rules
 
 ### Deployment Strategy
 - **Deployment Flow**
@@ -33,7 +36,7 @@ Notes-mirror/
 - [x] Proxy Patterns
 - [x] Code Style & Conventions
 - [ ] Access Control
-- [ ] Upgradeability
+- [x] Upgradeability
 - [ ] Gas Optimization
 - [ ] DeFi Patterns
 - [x] Deployment Strategy
