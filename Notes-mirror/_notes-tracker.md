@@ -13,6 +13,8 @@ Notes-mirror/
 │   │   └── uups-upgrade-mechanics.md
 │   ├── Code-Style/
 │   │   └── naming-conventions.md
+├── DeFi-Patterns/
+│   └── staking-window-restrictions.md
 ├── Deployment-Strategy/
 │   └── deployment-flow-review.md
 ```
@@ -27,6 +29,12 @@ Notes-mirror/
   - `naming-conventions.md`: Solidity naming conventions, underscore patterns, public-internal function patterns, and style guide references
   - `contract-layout-template.md`: Standard contract organization template with function/modifier ordering rules
 
+### DeFi Patterns
+- **Staking Patterns**
+  - `staking-window-restrictions.md`: Standard pattern for restricting parameter changes during active reward periods, industry practices and variations
+- **Reward Calculation**
+  - `reward-calculation-approaches.md`: Comprehensive comparison between Synthetix StakingRewards pattern and complex multiplier-based systems, including multi-pool implementations and current industry usage
+
 ### Deployment Strategy
 - **Deployment Flow**
   - `deployment-flow-review.md`: Review and assessment of the UUPS deployment strategy, including strengths, technical accuracy, and improvement recommendations
@@ -38,7 +46,7 @@ Notes-mirror/
 - [ ] Access Control
 - [x] Upgradeability
 - [ ] Gas Optimization
-- [ ] DeFi Patterns
+- [x] DeFi Patterns
 - [x] Deployment Strategy
 
 ## Note Creation Guidelines

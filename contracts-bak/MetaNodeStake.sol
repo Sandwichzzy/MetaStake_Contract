@@ -345,7 +345,7 @@ contract MetaNodeStake is
      * @notice Return reward multiplier over given _from to _to block. [_from, _to)
      *
      * @param _from    From block number (included)
-     * @param _to      To block number (exluded)
+     * @param _to      To block number (excluded)
      */
     function getMultiplier(uint256 _from, uint256 _to) public view returns(uint256 multiplier) {
         require(_from <= _to, "invalid block");

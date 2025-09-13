@@ -37,3 +37,7 @@
 ### 20250906
 
 - Working on pause
+
+### 20250913
+
+- Initially understand the math behind calculation, start implement it with plain approach

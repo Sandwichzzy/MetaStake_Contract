@@ -109,3 +109,37 @@ Why is does calculation used reward per token across users? For example
 Whenever staked amount changed(exclude initial stake)
 **The reward per token to use**:
 When calculating reward per token, we use global previous, when calculating actual reward earned, we use user specific previous, so we need to keep track of this data
+
+#### Algorithm
+1. On total amount change(i.e., user stake or withdraw)
+    1. Calculate reward per token
+    2. Calculate reward earned by user
+    3. Update user reward per token paid
+    4. Update last update time
+    5. Update stake amount
+
+#### Implementation of this mechanism
+##### Algorithm
+**On Stake or Withdraw**
+1. Calculate current reward per token
+    - r: reward per token
+    - `r += R / totalSupply * (currBlock - lastUpdateBlock)`
+2. Calculate reward earned by user
+    - `rewards[user] += balanceOf[user] * (r - userRewardPerTokenPaid[user])`
+3. Update user reward per token paid
+    - `userRewardPerTokenPaid[user] = r`
+4. Update last update time
+    - `lastUpdateBlock = currBlock`
+5. Update staked amount
+    - `balanceOfUser[user] += amount` / `balanceOfUser -= amount`
+    - `totalSupply += amount` / `totalSupply -= amount`
+
+##### Details
+1. `rewardRate` is not directly set, it is calculated, by either `totalSupply` update or admin adjusting total reward
+
+- Storing reward per token
+    - Need to store global changes and user changes
+    - I can store entire history with array for both user and pool structs, but this would increase storage usage
+    - **Final verdict**: Just store calculation essentials, much cheaper, and history can always be retrieved by logs and events from off-chain
+- Token minting
+    - I would mint the tokens on season declaration
