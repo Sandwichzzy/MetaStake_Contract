@@ -92,14 +92,20 @@ To calculate total reward, I should be able to calculate reward for each block f
 The total amount would be the sum of this from start block to end block, during this period, the amount of `userStaked` and `poolTotal` might change, and
 for long periods, the calculation can be gas intensive, hence we need an equivalent formula
 
-First, from block _n_ to block _k_, the sum of blocks from _n_ to _k_ is equal to:
+See [math note](../MathNotes/Forloop%20reconstruct.pdf)
 
-> [Sum of *0* to *n - 1*] - [Sum of *0* to *k - 1*], just like a prefix sum subtraction
+#### Reward per token calculation
 
-And to calculate reward from _j0_ to _j_:
+Why is does calculation used reward per token across users? For example
 
-> r0 = 0
-> rj = rj0 + (R / T) * (j - j0)
-> Where `j` is the target time, `j0` is the last time reward changed(someone deposited or withdrew, initially, it would be 0), *R\* is the reward rate, `T` is the total token amount staked where the amount of token staked is constant during this calculation: `j0 <= i <= j`
+> Alice staked 100 at 3
+> Bob staked 200 at 5
+> To calculate reward per token at 5, i.e., `r5`:
+> `r5 = r3 + (R / T) * (5 - 3)`
+> It is cuz when Alice staked, reward per token changed, and when Bob staked, reward per token also changed, I am "updating" the reward per token for the entire season, not just Bob, so it relates to `r3` instead of `r0` for `r3` is the last
 
-So in implementation, the reward is calculated each time the user change their stake amount, by calculate the current stake reward, minus the last time it is changed
+#### When to calculate reward earned by user?
+
+Whenever staked amount changed(exclude initial stake)
+**The reward per token to use**:
+When calculating reward per token, we use global previous, when calculating actual reward earned, we use user specific previous, so we need to keep track of this data

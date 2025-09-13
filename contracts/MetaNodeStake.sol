@@ -74,6 +74,7 @@ contract MetaNodeStake is
     // Errors
     error InvalidWindow(uint256 start, uint256 end);
     error InvalidRewardAmount(uint256 rewardPerBlock);
+    error InvalidMintAmount(uint256 mindAmount);
 
     error ClaimAlreadyPaused();
     error ClaimNotPausedYet();
@@ -206,4 +207,10 @@ contract MetaNodeStake is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyRole(UPGRADER_ROLE) {}
+
+    function mintReward(uint256 _amount) private {
+        require(_amount > 0, InvalidMintAmount(_amount));
+
+        metaNodeToken.mint(_amount);
+    }
 }
