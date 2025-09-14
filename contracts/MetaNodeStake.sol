@@ -10,7 +10,7 @@ import "./MetaNodeToken.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; // Safe handling ERC20
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 // TODO: Organize notes to natspec
 
@@ -18,7 +18,8 @@ contract MetaNodeStake is
     Initializable,
     AccessControlUpgradeable,
     UUPSUpgradeable,
-    PausableUpgradeable
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable
 {
     // Roles, constants
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -37,6 +38,14 @@ contract MetaNodeStake is
         uint256 lockPeriod;
     }
 
+    /**
+     * @dev Padded approach: stores `pId + 1` -> 0 being nonexistent
+     */
+    mapping(address => uint256) tokenPoolIds;
+
+    /**
+     * @notice `rewardPerTokenPaid` is updated with `getRewardPerToken(uint256)`, so it is also scaled by 1e18
+     */
     struct UserRecord {
         uint256 stakedAmount;
         uint256 rewardPerTokenPaid;
@@ -67,10 +76,10 @@ contract MetaNodeStake is
 
     // Events
     event TokenSet(address indexed curr);
+    event PoolCreated(address indexed token, uint256 indexed poolId);
 
-    event StartBlockSet(uint256 indexed value, address indexed by);
-    event EndBlockSet(uint256 indexed value, address indexed by);
-    event RewardPerBlockSet(uint256 indexed value, address indexed by);
+    event SeasonWindowSet(uint256 indexed startBlock, uint256 indexed endBlock);
+    event RewardRateUpdated(uint256 indexed value, address indexed by);
 
     event ClaimPaused(uint256 indexed blockNum, address indexed operator);
     event ClaimUnpaused(uint256 indexed blockNum, address indexed operator);
@@ -78,11 +87,19 @@ contract MetaNodeStake is
     event WithdrawUnpaused(uint256 indexed blockNum, address indexed operator);
 
     // Errors
+    error InvalidPoolId(uint256 pId);
+
     error InvalidWindow(uint256 start, uint256 end);
     error InvalidRewardAmount(uint256 rewardPerBlock);
     error InvalidMintAmount(uint256 mindAmount);
-    error RewardSeasonActive();
+
     error InvalidRewardRate();
+    error RewardSeasonActive();
+
+    error DuplicatePool(address token);
+    error InvalidPoolWeight();
+    error InvalidMinStakeAmount();
+    error InvalidLockPeriod();
 
     error ClaimAlreadyPaused();
     error ClaimNotPausedYet();
@@ -120,38 +137,50 @@ contract MetaNodeStake is
     }
 
     modifier validWindow(uint256 _startBlock, uint256 _endBlock) {
-        if (_startBlock > _endBlock) {
-            revert InvalidWindow(_startBlock, _endBlock);
-        }
-        if (block.number >= startBlock) {
+        if (block.number <= endBlock) {
             revert RewardSeasonActive();
         }
+        if (_startBlock >= _endBlock) {
+            revert InvalidWindow(_startBlock, _endBlock);
+        }
+        _;
+    }
+
+    modifier validPid(uint256 _pId) {
+        require(_pId < pools.length, InvalidPoolId(_pId));
         _;
     }
 
     /**
      * Made a modifier, will be fired by any actions that changes rewardRate: reward amount change, user stake/withdraw
+     * The actions calculates the reward prior of the change that triggered this, updates the related states, so it
+     * runs BEFORE the update of rewardRates, etc.,
      */
-    modifier updatesRewardRate(uint256 _pId, address _user) {
-        if (_pId != 0) {
-            // Triggered by user stake/withdraw
-            Pool storage pool_ = pools[_pId];
-            pool_.rewardPerTokenStored = getRewardPerToken(_pId); // Calculate rj
-            pool_.lastUpdateBlock = getLastValidRewardBlock(); // Update blocknum
-
-            UserRecord storage userLedger_ = userLedger[_pId][_user];
-            userLedger_.rewardsEarned = earnedReward(_pId, _user); // Update reward
-            userLedger_.rewardPerTokenPaid = pool_.rewardPerTokenStored; // Record this rj
-        } else {
-            // Bulk update pools using for loop
+    function updatesReward(uint256 _pId, address _user) private {
+        if (_pId == 0) {
+            /**
+             * Triggered by user stake/withdraw, since there's no user stake or withdraw involved,
+             * no need to update user's `rewardPerTokenPaid`
+             */
+            // Bulk update pools using for loop, this will be expensive
             for (uint i = 0; i < pools.length; i++) {
                 Pool storage pool_ = pools[i];
                 pool_.rewardPerTokenStored = getRewardPerToken(i); // Calculate rj
                 pool_.lastUpdateBlock = getLastValidRewardBlock(); // Update blocknum
             }
-        }
+        } else {
+            // Triggered by pool update or s/w
+            Pool storage pool_ = pools[_pId];
+            pool_.rewardPerTokenStored = getRewardPerToken(_pId); // Calculate rj
+            pool_.lastUpdateBlock = getLastValidRewardBlock(); // Update blocknum
 
-        _;
+            // Triggered by user stake/withdraw
+            if (_user != address(0)) {
+                UserRecord storage userLedger_ = userLedger[_pId][_user];
+                userLedger_.rewardsEarned = earnedReward(_pId, _user); // Update reward
+                userLedger_.rewardPerTokenPaid = pool_.rewardPerTokenStored; // Record this rj
+            }
+        }
     }
 
     constructor() {
@@ -173,6 +202,7 @@ contract MetaNodeStake is
     ) public initializer {
         __Pausable_init();
         __AccessControl_init();
+        __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -183,12 +213,13 @@ contract MetaNodeStake is
         metaNodeToken = MetaNodeToken(_rewardToken);
         emit TokenSet(_rewardToken);
 
-        startBlock = _startBlock;
-        emit StartBlockSet(_startBlock, msg.sender);
-        endBlock = _endBlock;
-        emit EndBlockSet(_endBlock, msg.sender);
-        _rewardRate = _rewardRate;
-        emit RewardPerBlockSet(_rewardRate, msg.sender);
+        setSeasonWindow(_startBlock, _endBlock);
+
+        rewardRate = _rewardRate;
+        emit RewardRateUpdated(_rewardRate, msg.sender);
+        _mintReward((_endBlock - _startBlock) * _rewardRate);
+
+        createPool(address(0), 100, 0.01 ether, 5);
     }
 
     // Admin funcs
@@ -223,32 +254,102 @@ contract MetaNodeStake is
         emit TokenSet(_token);
     }
 
-    // Configure season
-    function setStartBlock(
-        uint256 _startBlock
-    ) public onlyRole(ADMIN_ROLE) validWindow(_startBlock, endBlock) {
-        startBlock = _startBlock;
-        emit StartBlockSet(_startBlock, msg.sender);
+    function createPool(
+        address _token,
+        uint256 _poolWeight,
+        uint256 _minAmount,
+        uint256 _lockPeriod
+    ) public onlyRole(ADMIN_ROLE) {
+        require(tokenPoolIds[_token] == 0, DuplicatePool(_token));
+        require(_poolWeight > 0, InvalidPoolWeight());
+        require(_minAmount > 0, InvalidMinStakeAmount());
+        require(_lockPeriod > 0, InvalidLockPeriod());
+
+        Pool memory newPool = Pool({
+            stakeToken: _token,
+            poolWeight: _poolWeight,
+            totalSupply: 0,
+            rewardPerTokenStored: 0,
+            lastUpdateBlock: block.number,
+            minTokenLock: _minAmount,
+            lockPeriod: _lockPeriod
+        });
+
+        uint256 poolId = pools.length;
+        tokenPoolIds[_token] = poolId + 1;
+        pools.push(newPool);
+        totalWeight += _poolWeight;
+
+        emit PoolCreated(_token, poolId);
     }
 
-    function setEndBlock(
+    function updatePool(
+        uint256 _pId,
+        uint256 _poolWeight,
+        uint256 _minAmount,
+        uint256 _lockPeriod
+    ) public onlyRole(ADMIN_ROLE) validPid(_pId) {
+        require(_poolWeight > 0, InvalidPoolWeight());
+        require(_minAmount > 0, InvalidMinStakeAmount());
+        require(_lockPeriod > 0, InvalidLockPeriod());
+
+        Pool storage pool_ = pools[_pId];
+        uint256 oldWeight = pool_.poolWeight;
+        uint256 oldMin = pool_.minTokenLock;
+        uint256 oldLockPeriod = pool_.lockPeriod;
+
+        if (oldWeight != _poolWeight) {
+            updatesReward(_pId, address(0));
+            totalWeight += _poolWeight - oldWeight;
+            pool_.poolWeight = _poolWeight;
+        }
+        if (oldMin != _minAmount) {
+            pool_.minTokenLock = _minAmount;
+        }
+        if (oldLockPeriod != _lockPeriod) {
+            pool_.lockPeriod = _lockPeriod;
+        }
+    }
+
+    //Season configuration
+
+    /**
+     * This can only be called outside of active season, and the previous reward rate is not
+     * updated in this function, should combine this call with `setTotalReward` when starting
+     * a new season, to ensure minting the needed reward
+     * @param _startBlock Start block of new season
+     * @param _endBlock End block of new season
+     */
+    function setSeasonWindow(
+        uint256 _startBlock,
         uint256 _endBlock
-    ) public onlyRole(ADMIN_ROLE) validWindow(startBlock, _endBlock) {
-        endBlock = _endBlock;
-        emit StartBlockSet(_endBlock, msg.sender);
+    ) public onlyRole(ADMIN_ROLE) validWindow(_startBlock, _endBlock)  {
+        updatesReward(0, address(0));
+        if (_startBlock != startBlock) {
+            startBlock = _startBlock;
+        }
+        if (_endBlock != endBlock) {
+            endBlock = _endBlock;
+        }
+
+        emit SeasonWindowSet(_startBlock, _endBlock);
     }
 
     function getLastValidRewardBlock() public view returns (uint256 lastValidRewardBlock) {
         lastValidRewardBlock = _min(block.number, endBlock);
     }
 
-    function getWeightedRewardRate(uint256 _pId) public view returns (uint256) {
+    function getWeightedRewardRate(uint256 _pId) public view validPid(_pId) returns (uint256) {
         // Calculates `R` based on pool weight
         Pool memory pool = pools[_pId];
         return rewardRate * (pool.poolWeight / totalWeight);
     }
 
-    function getRewardPerToken(uint256 _pId) public view returns (uint256) {
+    /**
+     * Calculates reward per token(rj) for pool: _pId, scaled by 1e18 to handle decimals
+     * @param _pId Pool id
+     */
+    function getRewardPerToken(uint256 _pId) public view validPid(_pId) returns (uint256) {
         // Calculating rj
 
         Pool memory pool = pools[_pId];
@@ -258,55 +359,64 @@ contract MetaNodeStake is
 
         return
             pool.rewardPerTokenStored +
-            (getWeightedRewardRate(_pId) / pool.totalSupply) *
-            (getLastValidRewardBlock() - pool.lastUpdateBlock) *
-            1e18;
+            (getWeightedRewardRate(_pId) *
+                (getLastValidRewardBlock() - pool.lastUpdateBlock) *
+                1e18) /
+            pool.totalSupply;
     }
 
-    function earnedReward(uint256 _pId, address _user) public view returns (uint256) {
+    function earnedReward(
+        uint256 _pId,
+        address _user
+    ) public view validPid(_pId) returns (uint256) {
         // Calculation of reward: see math note
         UserRecord memory userRecord = userLedger[_pId][_user];
-        return (userRecord.stakedAmount *
-            (getRewardPerToken(_pId) - userRecord.rewardPerTokenPaid) +
-            userRecord.rewardsEarned /
-            1e18);
+        return
+            userRecord.rewardsEarned +
+            (userRecord.stakedAmount * (getRewardPerToken(_pId) - userRecord.rewardPerTokenPaid)) /
+            1e18;
     }
 
     /**
      * External functions
      */
 
-    function setTotalReward(
-        uint256 _amount
-    ) external onlyRole(ADMIN_ROLE) updatesRewardRate(0, address(0)) {
+    function setTotalReward(uint256 _amount) external onlyRole(ADMIN_ROLE) {
+        updatesReward(0, address(0));
         // Season ended
         if (block.number >= endBlock) {
             rewardRate = _amount / (endBlock - startBlock);
         } else {
             // Not ended
-
             // Changes only concern future reward calculation
             uint256 currRemainingReward = (endBlock - block.number) * rewardRate;
             rewardRate = (currRemainingReward + _amount) / (endBlock - startBlock);
         }
 
         require(rewardRate > 0, InvalidRewardRate());
+        emit RewardRateUpdated(rewardRate, msg.sender);
         _mintReward(_amount);
         endBlock += endBlock - startBlock;
     }
 
-    function stake(uint256 _pId, uint256 _amount) external {
+    function stake(uint256 _pId, uint256 _amount) external payable validPid(_pId) {
+        updatesReward(_pId, msg.sender);
         // TODO: To be implemented
         /**
          * Updates pool's totalSupply, transfers token, updates user's stakedAmount(balance)
          */
     }
 
-    function withdraw(uint256 _pId, uint256 _amount) external {
+    function requestWithdraw(uint256 _pId, uint256 _amount) external validPid(_pId) {
+        updatesReward(_pId, msg.sender);
         // TODO: To be implemented
     }
 
-    function claim(uint256 _pId) external {
+    function claim(uint256 _pId) external validPid(_pId) nonReentrant {
+        // TODO: To be implemented
+    }
+
+    function claimAll() external nonReentrant {
         // TODO: To be implemented
     }
 
@@ -314,9 +424,13 @@ contract MetaNodeStake is
      * Internal functions
      */
 
-    function _depositEth(uint256 _amount) internal {}
+    function _depositEth(uint256 _amount) internal {
+        // TODO: Implement
+    }
 
-    function _deposit(address token, uint256 _amount) internal {}
+    function _deposit(address token, uint256 _amount) internal {
+        // TODO: Implement
+    }
 
     /**
      * Private functions

@@ -111,6 +111,7 @@ Whenever staked amount changed(exclude initial stake)
 When calculating reward per token, we use global previous, when calculating actual reward earned, we use user specific previous, so we need to keep track of this data
 
 #### Algorithm
+
 1. On total amount change(i.e., user stake or withdraw)
     1. Calculate reward per token
     2. Calculate reward earned by user
@@ -119,8 +120,11 @@ When calculating reward per token, we use global previous, when calculating actu
     5. Update stake amount
 
 #### Implementation of this mechanism
+
 ##### Algorithm
+
 **On Stake or Withdraw**
+
 1. Calculate current reward per token
     - r: reward per token
     - `r += R / totalSupply * (currBlock - lastUpdateBlock)`
@@ -135,6 +139,7 @@ When calculating reward per token, we use global previous, when calculating actu
     - `totalSupply += amount` / `totalSupply -= amount`
 
 ##### Details
+
 1. `rewardRate` is not directly set, it is calculated, by either `totalSupply` update or admin adjusting total reward
 
 - Storing reward per token
@@ -143,3 +148,14 @@ When calculating reward per token, we use global previous, when calculating actu
     - **Final verdict**: Just store calculation essentials, much cheaper, and history can always be retrieved by logs and events from off-chain
 - Token minting
     - I would mint the tokens on season declaration
+
+2. Setting season
+    - The validation of season window is buggy: Need to adjust `endBlock` first -> Must result in active season -> Blocks adjustments of `startBlock`
+    - Combine the two, and to avoid duplicate `sstore`, add equality check
+
+3. Decimal handling by scaling
+    - When dealing with reward per token and reward per token paid, scale by `1e18` to handle decimals, this is where I should employ `SafeMath`;
+
+4. Duplicate pool
+    - Need to handle dup pool, the cleanest approach is mapping
+    - Padded approach

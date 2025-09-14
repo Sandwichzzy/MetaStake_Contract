@@ -13,6 +13,8 @@ Notes-mirror/
 │   │   └── uups-upgrade-mechanics.md
 │   ├── Code-Style/
 │   │   └── naming-conventions.md
+│   ├── Precision-Handling/
+│   │   └── precision-best-practices.md
 ├── DeFi-Patterns/
 │   └── staking-window-restrictions.md
 ├── Deployment-Strategy/
@@ -28,10 +30,13 @@ Notes-mirror/
 - **Code Style**
   - `naming-conventions.md`: Solidity naming conventions, underscore patterns, public-internal function patterns, and style guide references
   - `contract-layout-template.md`: Standard contract organization template with function/modifier ordering rules
+- **Precision Handling**
+  - `precision-best-practices.md`: Critical patterns for maintaining precision in Solidity arithmetic, multiply-before-divide principle, and 1e18 scaling in financial calculations
 
 ### DeFi Patterns
 - **Staking Patterns**
   - `staking-window-restrictions.md`: Standard pattern for restricting parameter changes during active reward periods, industry practices and variations
+  - `pool-management-strategies.md`: Comprehensive analysis of pool ID mapping, duplicate token handling, and industry approaches from MasterChef, Uniswap, and other major protocols
 - **Reward Calculation**
   - `reward-calculation-approaches.md`: Comprehensive comparison between Synthetix StakingRewards pattern and complex multiplier-based systems, including multi-pool implementations and current industry usage
 
