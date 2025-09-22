@@ -39,3 +39,4 @@ const MetaNodeToken = "0x264e0349deEeb6e8000D40213Daf18f8b3dF02c3";
 ```
 npx hardhat run scripts/MetaNodeStake.js --network sepolia
 ```
+

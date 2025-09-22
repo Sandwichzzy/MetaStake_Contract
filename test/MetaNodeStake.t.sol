@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+
 import {Test, console2} from "forge-std/Test.sol";
 
-import {MetaNodeStake} from "../contracts/MetaNodeStake.sol";
+import {MetaNodeStake} from "../contracts-bak/MetaNodeStake.sol";
 // MetaNode is ERC20 contract
 import {MetaNode} from "../contracts/shared/MockMetaNode.sol";
 
@@ -39,14 +40,14 @@ contract MetaNodeStakeTest is Test {
         MetaNodeStake.addPool(_stTokenAddress, _poolWeight, _minDepositAmount, _withdrawLockedBlocks, _withUpdate);
 
         (
-          address stTokenAddress, 
-          uint256 poolWeight, 
-          uint256 lastRewardBlock,
-          uint256 accMetaNodePerShare,
-          uint256 stTokenAmount,
-          uint256 minDepositAmount, 
-          uint256 withdrawLockedBlocks
-        )  = MetaNodeStake.pool(0);
+            address stTokenAddress,
+            uint256 poolWeight,
+            uint256 lastRewardBlock,
+            uint256 accMetaNodePerShare,
+            uint256 stTokenAmount,
+            uint256 minDepositAmount,
+            uint256 withdrawLockedBlocks
+        ) = MetaNodeStake.pool(0);
         assertEq(stTokenAddress, _stTokenAddress);
         assertEq(poolWeight, _poolWeight);
         assertEq(minDepositAmount, _minDepositAmount);
@@ -60,14 +61,14 @@ contract MetaNodeStakeTest is Test {
         test_AddPool();
         MetaNodeStake.massUpdatePools();
         (
-          address stTokenAddress, 
-          uint256 poolWeight, 
-          uint256 lastRewardBlock,
-          uint256 accMetaNodePerShare,
-          uint256 stTokenAmount,
-          uint256 minDepositAmount, 
-          uint256 withdrawLockedBlocks
-        )  = MetaNodeStake.pool(0);
+            address stTokenAddress,
+            uint256 poolWeight,
+            uint256 lastRewardBlock,
+            uint256 accMetaNodePerShare,
+            uint256 stTokenAmount,
+            uint256 minDepositAmount,
+            uint256 withdrawLockedBlocks
+        ) = MetaNodeStake.pool(0);
         assertEq(minDepositAmount, 100);
         assertEq(withdrawLockedBlocks, 100);
         assertEq(lastRewardBlock, 100);
@@ -75,14 +76,14 @@ contract MetaNodeStakeTest is Test {
         vm.roll(1000);
         MetaNodeStake.massUpdatePools();
         (
-          stTokenAddress, 
-          poolWeight, 
-          lastRewardBlock,
-          accMetaNodePerShare,
-          stTokenAmount,
-          minDepositAmount, 
-          withdrawLockedBlocks
-        )  = MetaNodeStake.pool(0);
+            stTokenAddress,
+            poolWeight,
+            lastRewardBlock,
+            accMetaNodePerShare,
+            stTokenAmount,
+            minDepositAmount,
+            withdrawLockedBlocks
+        ) = MetaNodeStake.pool(0);
         assertEq(minDepositAmount, 100);
         assertEq(withdrawLockedBlocks, 100);
         assertEq(lastRewardBlock, 1000);
@@ -91,18 +92,18 @@ contract MetaNodeStakeTest is Test {
     function test_SetPoolWeight() public {
         test_AddPool();
         uint256 preTotalPoolWeight = MetaNodeStake.totalPoolWeight();
-        
-        
+
+
         MetaNodeStake.setPoolWeight(0, 200, false);
         (
-          address stTokenAddress, 
-          uint256 poolWeight, 
-          uint256 lastRewardBlock,
-          uint256 accMetaNodePerShare,
-          uint256 stTokenAmount,
-          uint256 minDepositAmount, 
-          uint256 withdrawLockedBlocks
-        )  = MetaNodeStake.pool(0);
+            address stTokenAddress,
+            uint256 poolWeight,
+            uint256 lastRewardBlock,
+            uint256 accMetaNodePerShare,
+            uint256 stTokenAmount,
+            uint256 minDepositAmount,
+            uint256 withdrawLockedBlocks
+        ) = MetaNodeStake.pool(0);
         uint256 totalPoolWeight = MetaNodeStake.totalPoolWeight();
         uint256 expectedTotalPoolWeight = preTotalPoolWeight - 100 + 200;
         assertEq(poolWeight, 200);
@@ -112,20 +113,20 @@ contract MetaNodeStakeTest is Test {
     function test_DepositnativeCurrency() public {
         test_AddPool();
         (
-          address stTokenAddress, 
-          uint256 poolWeight, 
-          uint256 lastRewardBlock,
-          uint256 accMetaNodePerShare,
-          uint256 stTokenAmount,
-          uint256 minDepositAmount, 
-          uint256 withdrawLockedBlocks
+            address stTokenAddress,
+            uint256 poolWeight,
+            uint256 lastRewardBlock,
+            uint256 accMetaNodePerShare,
+            uint256 stTokenAmount,
+            uint256 minDepositAmount,
+            uint256 withdrawLockedBlocks
         ) = MetaNodeStake.pool(0);
         uint256 prePoolStTokenAmount = stTokenAmount;
 
         (
-          uint256 stAmount,
-          uint256 finishedMetaNode,
-          uint256 pendingMetaNode
+            uint256 stAmount,
+            uint256 finishedMetaNode,
+            uint256 pendingMetaNode
         ) = MetaNodeStake.user(0, address(this));
         uint256 preStAmount = stAmount;
         uint256 preFinishedMetaNode = finishedMetaNode;
@@ -133,22 +134,22 @@ contract MetaNodeStakeTest is Test {
 
         // First deposit
         address(MetaNodeStake).call{value: 100}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
         (
-          stTokenAddress, 
-          poolWeight, 
-          lastRewardBlock,
-          accMetaNodePerShare,
-          stTokenAmount,
-          minDepositAmount, 
-          withdrawLockedBlocks
-        )  = MetaNodeStake.pool(0);
+            stTokenAddress,
+            poolWeight,
+            lastRewardBlock,
+            accMetaNodePerShare,
+            stTokenAmount,
+            minDepositAmount,
+            withdrawLockedBlocks
+        ) = MetaNodeStake.pool(0);
 
         (
-          stAmount,
-          finishedMetaNode,
-          pendingMetaNode
+            stAmount,
+            finishedMetaNode,
+            pendingMetaNode
         ) = MetaNodeStake.user(0, address(this));
 
         uint256 expectedStAmount = preStAmount + 100;
@@ -161,37 +162,37 @@ contract MetaNodeStakeTest is Test {
 
         // more deposit
         address(MetaNodeStake).call{value: 200 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         vm.roll(2000000);
         MetaNodeStake.unstake(0, 100);
         address(MetaNodeStake).call{value: 300 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         vm.roll(3000000);
         MetaNodeStake.unstake(0, 100);
         address(MetaNodeStake).call{value: 400 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         vm.roll(4000000);
         MetaNodeStake.unstake(0, 100);
         address(MetaNodeStake).call{value: 500 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         vm.roll(5000000);
         MetaNodeStake.unstake(0, 100);
         address(MetaNodeStake).call{value: 600 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         vm.roll(6000000);
         MetaNodeStake.unstake(0, 100);
         address(MetaNodeStake).call{value: 700 ether}(
-          abi.encodeWithSignature("depositnativeCurrency()")
+            abi.encodeWithSignature("depositnativeCurrency()")
         );
 
         MetaNodeStake.withdraw(0);
@@ -199,27 +200,27 @@ contract MetaNodeStakeTest is Test {
 
     function test_Unstake() public {
         test_DepositnativeCurrency();
-        
+
         vm.roll(1000);
         MetaNodeStake.unstake(0, 100);
 
         (
-          uint256 stAmount,
-          uint256 finishedMetaNode,
-          uint256 pendingMetaNode
+            uint256 stAmount,
+            uint256 finishedMetaNode,
+            uint256 pendingMetaNode
         ) = MetaNodeStake.user(0, address(this));
         assertEq(stAmount, 0);
         assertEq(finishedMetaNode, 0);
         assertGt(pendingMetaNode, 0);
 
         (
-          address stTokenAddress, 
-          uint256 poolWeight, 
-          uint256 lastRewardBlock,
-          uint256 accMetaNodePerShare,
-          uint256 stTokenAmount,
-          uint256 minDepositAmount, 
-          uint256 withdrawLockedBlocks
+            address stTokenAddress,
+            uint256 poolWeight,
+            uint256 lastRewardBlock,
+            uint256 accMetaNodePerShare,
+            uint256 stTokenAmount,
+            uint256 minDepositAmount,
+            uint256 withdrawLockedBlocks
         ) = MetaNodeStake.pool(0);
 
         uint256 expectStTokenAmount = 0;
@@ -230,7 +231,7 @@ contract MetaNodeStakeTest is Test {
         test_Unstake();
         uint256 preContractBalance = address(MetaNodeStake).balance;
         uint256 preUserBalance = address(this).balance;
-      
+
         vm.roll(10000);
         MetaNodeStake.withdraw(0);
 
